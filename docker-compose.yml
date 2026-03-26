@@ -1,0 +1,10 @@
+services:
+  webhook:
+    env_file:
+      - .env
+    build: .
+    ports:
+      - "9000:9000"
+    volumes:
+      - ${VAULT_PATH}:${VAULT_PATH}
+    restart: unless-stopped
