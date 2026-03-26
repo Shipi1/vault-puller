@@ -2,17 +2,20 @@
 set -e
 
 TOKEN="${WEBHOOK_TOKEN:?WEBHOOK_TOKEN must be set}"
+VAULT="${VAULT_PATH:?VAULT_PATH must be set}"
+
+RESPONSE="HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nOK"
+
+echo "Webhook listening on port 9000..."
 
 while true; do
-  # Listen for a single HTTP request on port 9000
-  REQUEST=$(echo -e "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nOK" | nc -l -p 9000 -w 30 2>/dev/null | head -5)
+  REQUEST=$(echo -e "$RESPONSE" | nc -l -p 9000 2>/dev/null)
 
-  # Check for valid authorization header
-  if echo "$REQUEST" | grep -qi "Authorization: Bearer $TOKEN"; then
-    echo "$(date) - Authorized request received. Pulling..."
-    cd "${VAULT_PATH}" && git pull
-    echo "$(date) - Pull complete."
+  if echo "$REQUEST" | grep -q "Bearer $TOKEN"; then
+    echo "$(date) - Authorized. Pulling..."
+    cd "$VAULT" && git pull
+    echo "$(date) - Done."
   else
-    echo "$(date) - Unauthorized or empty request, ignoring."
+    echo "$(date) - Unauthorized or empty."
   fi
 done
